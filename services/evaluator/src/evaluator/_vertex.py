@@ -1,11 +1,14 @@
-"""Vertex AI evaluator — LLM-as-judge and embedding drift.
+"""GenAI evaluator — LLM-as-judge and embedding drift.
 
-Uses the new ``google-genai`` SDK.  The ``VertexProtocol`` allows testing
-the worker loop without invoking real LLM endpoints.
+Uses the ``google-genai`` SDK.  Supports both Google AI Studio (free tier,
+set ``GOOGLE_API_KEY``) and Vertex AI (ADC, requires billing).
+
+The ``VertexProtocol`` allows testing the worker loop without real LLM calls.
 """
 
 from __future__ import annotations
 
+import os
 from typing import Any, Protocol, runtime_checkable
 
 import structlog
@@ -31,12 +34,16 @@ class VertexProtocol(Protocol):
 
 
 class VertexEvaluator:
-    """Production implementation calling Google Cloud Vertex AI.
+    """Production GenAI evaluator — AI Studio (free) or Vertex AI.
+
+    Priority:
+    1. If ``GOOGLE_API_KEY`` env var is set → Google AI Studio (free tier).
+    2. Otherwise → Vertex AI via ADC (billing required on GCP project).
 
     Args:
-        project_id: GCP project id.
-        location: GCP region (e.g., 'us-central1').
-        judge_model: e.g. 'gemini-2.0-flash-001'.
+        project_id: GCP project id (Vertex AI fallback only).
+        location: GCP region (Vertex AI fallback only).
+        judge_model: e.g. 'gemini-2.0-flash'.
         embedding_model: e.g. 'text-embedding-004'.
     """
 
@@ -52,20 +59,28 @@ class VertexEvaluator:
         self._location = location
         self._judge_model = judge_model
         self._embedding_model = embedding_model
-        # Typed Any because google-genai may not have full stubs available.
         self._client: Any = None
 
     def _ensure_client(self) -> Any:  # noqa: ANN401
         if self._client is None:
-            # Import delayed so tests don't require credentials.
+            # Delayed import so tests don't need real credentials.
             from google import genai
 
-            # Use vertexai=True for enterprise features/compliance.
-            self._client = genai.Client(
-                vertexai=True,
-                project=self._project_id,
-                location=self._location,
-            )
+            api_key = os.environ.get("GOOGLE_API_KEY")
+            if api_key:
+                logger.info("genai client: AI Studio free tier")
+                self._client = genai.Client(api_key=api_key)
+            else:
+                logger.info(
+                    "genai client: Vertex AI (ADC)",
+                    project=self._project_id,
+                    location=self._location,
+                )
+                self._client = genai.Client(
+                    vertexai=True,
+                    project=self._project_id,
+                    location=self._location,
+                )
         return self._client
 
     async def evaluate_judge(self, messages_json: str) -> EvalScoreCard:
