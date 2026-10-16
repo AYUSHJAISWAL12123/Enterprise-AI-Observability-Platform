@@ -1,0 +1,10 @@
+[
+  { "name": "event_id", "type": "STRING", "mode": "REQUIRED" },
+  { "name": "trace_id", "type": "STRING", "mode": "REQUIRED" },
+  { "name": "groundedness_score", "type": "INT64", "mode": "NULLABLE" },
+  { "name": "relevance_score", "type": "INT64", "mode": "NULLABLE" },
+  { "name": "safety_flag", "type": "BOOLEAN", "mode": "NULLABLE" },
+  { "name": "embedding_distance", "type": "FLOAT64", "mode": "NULLABLE" },
+  { "name": "judge_rationale", "type": "STRING", "mode": "NULLABLE" },
+  { "name": "evaluated_at", "type": "TIMESTAMP", "mode": "REQUIRED" }
+]

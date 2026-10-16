@@ -1,0 +1,42 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: dashboard-ksa
+  annotations:
+    iam.gke.io/gcp-service-account: obs-evaluator-sa@${PROJECT_ID}.iam.gserviceaccount.com # Reusing for BQ read access
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dashboard-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dashboard-api
+  template:
+    metadata:
+      labels:
+        app: dashboard-api
+    spec:
+      serviceAccountName: dashboard-ksa
+      containers:
+        - name: dashboard-api
+          image: obs-dashboard-api:latest
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: obs-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dashboard-api
+spec:
+  type: LoadBalancer # For demo purposes; in prod use Ingress
+  selector:
+    app: dashboard-api
+  ports:
+    - port: 80
+      targetPort: 8000

@@ -1,0 +1,21 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: alerts
+spec:
+  schedule: "*/5 * * * *" # Every 5 minutes
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          # Uses the evaluator KSA for simplicity, or we can use a dedicated alerts-ksa
+          serviceAccountName: evaluator-ksa
+          restartPolicy: Never
+          containers:
+            - name: alerts
+              image: obs-alerts:latest
+              envFrom:
+                - configMapRef:
+                    name: obs-config

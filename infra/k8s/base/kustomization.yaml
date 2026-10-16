@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: obs-platform
+
+resources:
+  - gateway.yaml
+  - processor.yaml
+  - evaluator.yaml
+  - alerts.yaml
+  - dashboard.yaml
+
+# Generate ConfigMap from .env file during deployment
+configMapGenerator:
+  - name: obs-config
+    env: .env

@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "obs-processor"
+version = "0.1.0"
+description = "Pub/Sub -> BigQuery stream processor for GenAI telemetry events"
+requires-python = ">=3.12"
+dependencies = [
+    "obs-core",
+    "google-cloud-pubsub>=2.21",
+    "google-cloud-bigquery>=3.25",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2",
+    "pytest-asyncio>=0.23",
+    "mypy>=1.10",
+    "ruff>=0.4",
+]
+
+[tool.uv.sources]
+obs-core = { workspace = true }
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/processor"]

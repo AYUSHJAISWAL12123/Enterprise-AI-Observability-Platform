@@ -1,0 +1,36 @@
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.2",
+    "pytest-asyncio>=0.23",
+    "mypy>=1.10",
+    "ruff>=0.4",
+    "respx>=0.21.0",
+]
+
+[tool.uv.workspace]
+members = ["packages/*", "services/*"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "ANN", "S", "B", "C4", "PTH", "RUF"]
+ignore = []
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**/*.py" = ["S101", "ANN", "C408"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_ignores = true
+show_error_codes = true
+namespace_packages = true
+explicit_package_bases = true
+
+[tool.pytest.ini_options]
+testpaths = ["packages", "services", "tests"]
+addopts = "-v --tb=short --import-mode=importlib"
+asyncio_mode = "auto"
